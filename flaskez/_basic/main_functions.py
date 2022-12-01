@@ -30,7 +30,7 @@ def create_app(
     """
     create_app() is a function for generating a flask.Flask object.
     :param app_name: Name of the Flask application.
-    :param args: Optional positional arguments. Passed to the register_blueprint() function.
+    :param args: Optional positional arguments. Passed to the flask.Flask().register_blueprint() function.
     :param run: Optional bool if you want the function to run the application directly.
     :param run_kwargs: Optional dict if you want extra keyword arguments passed to the flask.Flask().run() function.
     :param config: Dictionary. Configuration for the flask.Flask object.
@@ -216,7 +216,7 @@ def create_blueprint(
                                        url_prefix=settings['prefix'] if 'prefix' in settings else None, *args,
                                        **kwargs)  # Registers the blueprint
             except ImportError as e:  # Error if the file didn't exist
-                if not _c.SUPPRESS_WARNINGS:  # Checks if the user want warnings
+                if not c.SUPPRESS_WARNINGS:  # Checks if the user want warnings
                     warnings.warn(
                         "One of the specified routes for create_app() was not found. "
                         "If you have not specified any custom routes, it means that there is no /routes folder." +
@@ -224,7 +224,7 @@ def create_blueprint(
                         ImportWarning
                     )  # Warning
             except AttributeError as e:  # Error if the blueprint is broken
-                if not _c.SUPPRESS_WARNINGS:  # Checks if the user want warnings
+                if not c.SUPPRESS_WARNINGS:  # Checks if the user want warnings
                     warnings.warn(
                         "Something went wrong trying to find the blueprint, "
                         "either there is no function, you haven't entered a function, or something is spelled incorrectly." +
@@ -237,7 +237,7 @@ def create_blueprint(
                                        settings['prefix'] if 'prefix' in settings else None, *args,
                                        **kwargs)  # Registers the blueprint
             except AttributeError as e:  # Error if the blueprint is broken
-                if not _c.SUPPRESS_WARNINGS:  # Checks if the user want warnings
+                if not c.SUPPRESS_WARNINGS:  # Checks if the user want warnings
                     warnings.warn(
                         "Something went wrong trying to find the blueprint, "
                         "either there is no function, you haven't entered a function, or something is spelled incorrectly." +
