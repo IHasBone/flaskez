@@ -52,7 +52,7 @@ In this current example the database is not used.
 I am currently working on making an importable universal database model.
 The config dictionary sets ``app.config["SQLALCHEMY_DATABASE_URI"]`` to ``"sqlite:///users.sqlite3"``, and ``app.config["SQLALCHEMY_TRACK_MODIFICATIONS"]`` to ``False``.
 It also tells the function that we should create a database.
-Depending on if create_db is true or not, we either return a flask.Flask object, or a tuple with flask.Flask and SQLAlchemy.
+Depending on if create_db is true or not, the program either returns a flask.Flask object, or a tuple with flask.Flask and SQLAlchemy.
 
 By default, the application generates a secret key using:
 ```python
@@ -62,6 +62,22 @@ app.secret_key = str(
             secrets.randbelow(100000) * random.randrange(1, 100)) + str(
             secrets.randbelow(1000000000) * 0.0001 * time.time())
 ```
+This can be disabled by settings ``generate_secret_key`` to ``False``:
+```python
+import flaskez
+
+app, db = flaskez.create_app(
+    __name__,
+    config={
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///users.sqlite3",
+        "SQLALCHEMY_TRACK_MODIFICATIONS": False
+    },
+    generate_secret_key=False,
+    create_db=True
+)
+```
+This will set the secret key to ``"DefaultKey"``, but can be changed using ``secret_key="my_secret_key"``.
+
 ---
 Example 3:
 -
@@ -102,6 +118,6 @@ app = flaskez.create_app(
 * create_db: Bool. Optionally create a database (using flask-sqlalchemy). Used for login, etc.
 * flask_kwargs: A dictionary for arguments passed to the creation of the flask.Flask object (kwargs and args are already used for blueprints)
 * db_kwargs: A dictionary for arguments passed to the creation of the flask_sqlalchemy.SQLAlchemy object (kwargs and args are already used for blueprints)
-* kwargs: Optional keyword arguments. Passed to the register_blueprint() function.
+* **kwargs: Optional keyword arguments. Passed to the register_blueprint() function.
 ---
 ### For more functionality, visit the [GitHub](https://github.com/IHasBone/flaskez), or read the [documentation]().
