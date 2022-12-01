@@ -119,5 +119,3 @@ app = flaskez.create_app(
 * flask_kwargs: A dictionary for arguments passed to the creation of the flask.Flask object (kwargs and args are already used for blueprints)
 * db_kwargs: A dictionary for arguments passed to the creation of the flask_sqlalchemy.SQLAlchemy object (kwargs and args are already used for blueprints)
 * **kwargs: Optional keyword arguments. Passed to the register_blueprint() function.
----
-### For more functionality, visit the [GitHub](https://github.com/IHasBone/flaskez), or read the [documentation]().
