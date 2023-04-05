@@ -17,17 +17,19 @@ Example program:
 ```python
 import flaskez
 
-app = flaskez.create_app(__name__)
+app = flaskez.create_app()
 
 @app.route("/")
 def home():
     return "Hello!"
 ```
-In this example, the syntax and everything is exactly like flask. The bigger help comes in to play when you are writing more complex programs.
+In this example, the syntax and everything is exactly like flask.
+The bigger help comes in to play when you are writing more complex programs.
+Since we haven't entered any parameters, it will name the application "flaskez_application".
 
 ---
 Example 2:
--
+---
 ```python
 import flaskez
 
@@ -55,13 +57,11 @@ It also tells the function that we should create a database.
 Depending on if create_db is true or not, the program either returns a flask.Flask object, or a tuple with flask.Flask and SQLAlchemy.
 
 By default, the application generates a secret key using:
+
 ```python
-app.secret_key = str(
-            time.time()) + str(
-            random.randrange(1, 10000)) + str(
-            secrets.randbelow(100000) * random.randrange(1, 100)) + str(
-            secrets.randbelow(1000000000) * 0.0001 * time.time())
+app.secret_key = secrets.token_urlsafe(256)
 ```
+secrets.tokens_urlsafe(256) generates a random URL-safe text string, in Base64 encoding, with 256 random bytes.
 This can be disabled by settings ``generate_secret_key`` to ``False``:
 ```python
 import flaskez
@@ -80,7 +80,7 @@ This will set the secret key to ``"DefaultKey"``, but can be changed using ``sec
 
 ---
 Example 3:
--
+---
 The ``create_app()`` function has a parameter called run, which you can use to run the flask.Flask object directly from the function.
 This requires having defined blueprints beforehand.
 ```python
@@ -119,3 +119,32 @@ app = flaskez.create_app(
 * flask_kwargs: A dictionary for arguments passed to the creation of the flask.Flask object (kwargs and args are already used for blueprints)
 * db_kwargs: A dictionary for arguments passed to the creation of the flask_sqlalchemy.SQLAlchemy object (kwargs and args are already used for blueprints)
 * **kwargs: Optional keyword arguments. Passed to the register_blueprint() function.
+---
+# instant_setup()
+## Usage:
+```python
+from flaskez import instant_setup
+from flaskez.Public.Models import Page
+
+page1 = Page(route='/')
+page2 = Page(route='/hello')
+
+instant_setup([page1, page2])
+```
+The page class takes to arguments when it is created: template_or_code and route. template_or_code can be either of type 'str' or 'TextIO'.
+If it is of type 'str', it can either be HTML code, an absolute path to a file containing HTML code, one of the pre-made templates (see flaskez.Public.Models.templates), or a template in yor templates directory (only works if you've defined a templates directory when creating the flask.Flask application).
+
+If it is of type 'TextIO', it will be read and the raw text will be set as the source.
+
+---
+The instant_setup() function takes four arguments: pages, run, static and templates. Pages is a list containing Page objects.
+
+Run is a bool telling the function if it should run the application instantly. The default is True.
+
+Static is the folder in which all static files will be. This has to be an absolute path. Default is templates, but it won't do anything.
+
+Templates is the folder in which all templates will be. This has to be an absolute path. Default is templates, but it won't do anything.
+
+---
+# Ideas
+* Compatibility with python versions below 3.10
