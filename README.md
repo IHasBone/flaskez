@@ -152,4 +152,5 @@ Templates is the folder in which all templates will be. Default is 'templates'.
 * Have all args and kwargs (primarily in ``create_app()``) in the same variable instead of having some be dictionaries.
 
 ---
-### For more functionality, visit the [GitHub](https://github.com/IHasBone/flaskez).
+# GitHub notes:
+* Eariler commits don't make a lot of sense.
