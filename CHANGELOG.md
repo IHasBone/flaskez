@@ -1,6 +1,21 @@
 # Changelog
 
 
+### 0.3.0a3 (06/04/2023)
+* Fixed typing.Dict not working properly.
+
+
+### 0.3.0a2 (05/04/2023)
+* Converted all remaining '|' operators to typing.Union for compatibility (missed some in the last update).
+* Updated 'Ideas' in README.
+* Slight code optimization.
+
+
+### 0.3.0a1 (05/04/2023)
+* Fixed errors about static files and templates in README.
+* Made compatible with 3.7 and above.
+
+
 ### 0.3.0.dev4 (05/04/2023)
 * Finished instant_setup().
 * Changed the way a secret key is generated, to make it more safe and efficient.

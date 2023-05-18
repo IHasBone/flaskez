@@ -11,7 +11,7 @@ classifiers = [
 
 setup(
     name='flaskez',
-    version='0.3.0.dev4',
+    version='0.3.0a3',
     description='Flaskez is a multipurpose flask extension. It exists both to make creating websites easier, but also to add extra functionality to flask.',
     long_description_content_type='text/markdown',
     long_description=open('README.md').read() + '\n\n' + open('CHANGELOG.md').read(),
@@ -23,5 +23,5 @@ setup(
     keywords=['flask', 'extension', 'website', 'web', 'site', 'flask-sqlalchemy', 'database', 'sqlalchemy'],
     packages=find_packages(),
     install_requires=['flask', 'flask-sqlalchemy'],
-    python_requires='>=3.10'
+    python_requires='>=3.7'
 )

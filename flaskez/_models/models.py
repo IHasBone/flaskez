@@ -1,3 +1,7 @@
+def _false() -> None:
+    raise ValueError("'value' has to be a bool.")
+
+
 class Configuration:
     """
     Configuration object for flaskez.
@@ -8,16 +12,13 @@ class Configuration:
     def __init__(self) -> None:
         self.__SUPPRESS = False
 
-    def _false(self) -> None:
-        raise ValueError("'value' has to be a bool.")
-
     @property
-    def SUPPRESS_WARNINGS(self) -> bool | None:
+    def SUPPRESS_WARNINGS(self) -> bool:
         return self.__SUPPRESS
 
     @SUPPRESS_WARNINGS.setter
     def SUPPRESS_WARNINGS(self, value: bool) -> None:
-        self.__SUPPRESS = value if isinstance(value, bool) else self._false()
+        self.__SUPPRESS = value if isinstance(value, bool) else _false()
 
 
 config = Configuration()

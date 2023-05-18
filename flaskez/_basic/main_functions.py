@@ -1,18 +1,16 @@
 # Imports
-from flask import Flask, Blueprint
-import time
-import random
-import secrets
-import datetime
+from flask import Flask, Blueprint, current_app
 from flask_sqlalchemy import SQLAlchemy
+from flaskez import config as c
 import typing as t
 import importlib
+import datetime
 import warnings
-from flaskez._models.models import config as c
+import secrets
 
 
 def create_app(
-        app_name: str,
+        app_name: t.Optional[str] = "flaskez_application",
         *args: t.Optional[t.Any],
         run: t.Optional[bool] = False,
         run_kwargs: t.Optional[dict] = None,
@@ -22,14 +20,14 @@ def create_app(
         routes: t.Optional[list] = None,
         error_pages: t.Optional[list] = None,
         permanent_session_lifetime: t.Optional[dict] = None,
-        create_db: t.Optional[bool] = None,
+        create_db: t.Optional[bool] = False,
         flask_kwargs: t.Optional[dict] = None,
         db_kwargs: t.Optional[dict] = None,
         **kwargs: t.Optional[t.Any]
-) -> tuple[Flask, SQLAlchemy] | Flask:  # Function for creating a flask.Flask object
+) -> t.Union[t.Tuple[Flask, SQLAlchemy], Flask]:  # Function for creating a flask.Flask object
     """
     create_app() is a function for generating a flask.Flask object.
-    :param app_name: Name of the Flask application.
+    :param app_name: Name of the Flask application. Defaults to "flaskez_application" if no value is entered.
     :param args: Optional positional arguments. Passed to the flask.Flask().register_blueprint() function.
     :param run: Optional bool if you want the function to run the application directly.
     :param run_kwargs: Optional dict if you want extra keyword arguments passed to the flask.Flask().run() function.
@@ -62,9 +60,6 @@ def create_app(
             'weeks': 0
         }  # Sets the value to the default value
 
-    if create_db is None:  # Checks if the user has entered if they want a database
-        create_db = False  # Sets the create_db variable to the default value of False
-
     if flask_kwargs is None:  # Checks if the user has entered any keyword arguments for the flask application
         flask_kwargs = {}  # Sets the flask_kwargs variable to the default value of {}, emtpy dict
 
@@ -77,11 +72,7 @@ def create_app(
     app = Flask(app_name, **flask_kwargs)  # Creating the application
 
     if generate_secret_key:  # Checks if the user wants to generate a secret key
-        app.secret_key = str(
-            time.time()) + str(
-            random.randrange(1, 10000)) + str(
-            secrets.randbelow(100000) * random.randrange(1, 100)) + str(
-            secrets.randbelow(1000000000) * 0.0001 * time.time())  # Sets secret key
+        app.secret_key = secrets.token_urlsafe(256)  # Sets secret key
 
     elif not generate_secret_key and secret_key is None:  # If the user does not want to generate a secret key but has not entered a custom one
         app.secret_key = "DefaultKey"  # Sets secret key
@@ -99,16 +90,21 @@ def create_app(
     if routes is not None:  # Checks if there are any custom blueprint routes
         try:  # Tries to create a blueprint
             for info in routes:  # Loops through the routes list
-                route = importlib.import_module(info['path']) if isinstance(info['path'], str) else info['path']  # Imports the file with the blueprint
-                app.register_blueprint(getattr(route, info['blueprint']),
-                                       url_prefix=info['prefix'] if 'prefix' in info else None, *args,
-                                       **kwargs)  # Registers the blueprint
-                del route
+                if 'path' in info:
+                    route = importlib.import_module(info['path']) if isinstance(info['path'], str) else info[
+                        'path']  # Imports the file with the blueprint
+                    app.register_blueprint(getattr(route, info['blueprint']),
+                                           url_prefix=info['prefix'] if 'prefix' in info else None, *args,
+                                           **kwargs)  # Registers the blueprint
+                    del route
+                else:
+                    app.register_blueprint(info['blueprint'],
+                                           url_prefix=info['prefix'] if 'prefix' in info else None, *args,
+                                           **kwargs)  # Registers the blueprint
         except ImportError as e:  # Error if the file didn't exist
             if not c.SUPPRESS_WARNINGS:  # Checks if the user want warnings
                 warnings.warn(
                     "One of the specified routes for create_app() was not found. "
-                    "If you have not specified any custom routes, it means that there is no /routes folder." +
                     "\nFull python error: " + str(e),
                     ImportWarning
                 )  # Warning
@@ -123,8 +119,8 @@ def create_app(
     else:  # No custom blueprints
         if not c.SUPPRESS_WARNINGS:  # Checks if the user want warnings
             warnings.warn(
-                "There are no custom blueprints. " +
-                "Make sure to either create a blueprint using the create_blueprint() function " +
+                "There are no custom blueprints. "
+                "Make sure to either create a blueprint using the create_blueprint() function "
                 "or have all pages come from the flask.Flask object itself.",
                 UserWarning
             )  # Warning
@@ -132,13 +128,19 @@ def create_app(
     if error_pages is not None:  # Checks if the user has specified any error pages
         try:
             for info in error_pages:  # Loops through the error pages list
-                route = importlib.import_module(info['path'])  # Imports the file with the error page
-                app.register_error_handler((info['code']), getattr(route, info['function']))  # Registers the error page
-                del route
+                if 'path' in info:
+                    route = importlib.import_module(info['path']) if isinstance(info['path'], str) else info[
+                        'path']  # Imports the file with the error page
+                    app.register_error_handler(info['code'],
+                                               getattr(route, info['function']))  # Registers the error page
+                    del route
+                else:
+                    app.register_error_handler(info['code'],
+                                               info['function'])
         except ImportError as e:  # Error if the file didn't exist
             if not c.SUPPRESS_WARNINGS:  # Checks if the user want warnings
                 warnings.warn(
-                    "One of the specified routes for an error page was not found." +
+                    "One of the specified routes for an error page was not found."
                     "\nFull python error: " + str(e),
                     ImportWarning
                 )  # Warning
@@ -146,7 +148,7 @@ def create_app(
             if not c.SUPPRESS_WARNINGS:  # Checks if the user want warnings
                 warnings.warn(
                     "Something went wrong trying to find the error page function, "
-                    "either there is no function, you haven't entered a function, or something is spelled incorrectly." +
+                    "either there is no function, you haven't entered a function, or something is spelled incorrectly."
                     "\nFull python error: " + str(e),
                     ImportWarning
                 )  # Warning
@@ -155,17 +157,17 @@ def create_app(
         db = SQLAlchemy(app, **db_kwargs)  # Creates a database and assigns the flask.Flask object to the database
         with app.app_context():  # Listens to the app_context()
             db.create_all()  # Creates all tables that don't already exist in the database
-        if run:
-            app.run(**run_kwargs)
+        if run:  # Checks if the user wants to run the application
+            app.run(**run_kwargs)  # Runs the application
         return app, db  # Returns the flask.Flask object and the database object
 
-    if run:
-        app.run(**run_kwargs)
+    if run:  # Checks if the user wants to run the application
+        app.run(**run_kwargs)  # Run the application
     return app  # Returns the flask.Flask object
 
 
 def create_blueprint(
-        app: Flask | str,
+        app: t.Optional[t.Union[Flask, str]] = current_app,
         *args: t.Optional[t.Any],
         app_name: t.Optional[str] = None,
         blueprint_name: t.Optional[str] = None,
@@ -173,7 +175,7 @@ def create_blueprint(
         settings: t.Optional[dict] = None,
         blueprint_kwargs: t.Optional[dict] = None,
         **kwargs: t.Optional[t.Any]
-) -> Blueprint | None:  # Function for creating and registering a new blueprint
+) -> t.Union[Blueprint, None]:  # Function for creating and registering a new blueprint
     """
     create_blueprint() is a function for creating and registering blueprints for your application.
     You need to use the create_app() function or make your own flask application before you can use this function.
@@ -182,13 +184,14 @@ def create_blueprint(
     :param app: Parameter for the application object.
     Either flask.Flask or type str with the path to import the file with the app
     (app_name is required to be filled in for this one to work).
+    If you use "with app.app_context():", you can skip app.
     :param args: Optional positional arguments. Passed to the register_blueprint() function.
     :param app_name: String.
     Used in case you want to import your flask.Flask object rather than passing it through the function (see param: app).
     :param blueprint_name: Name of the blueprint in case you want to not pass any settings, etc.
     :param blueprint_import_name: Import name for the blueprint. Only used if you create a blueprint inside this function without using settings.
     :param settings: List with settings in case you don't want to look up the parameters for the register_blueprint() function.
-    Format: settings=[{'path': 'routes.routes', 'blueprint': 'routes'}]
+    Format: settings=[{'path': 'routes.routes', 'blueprint': 'routes'}] or settings=[{'blueprint': flask.Blueprint(*args, **kwargs)}]
     Path can also be the imported file.
     An optional key 'prefix' can be added to specify a prefix for the url (an extra / (route) before the unique route of the web page).
     :param blueprint_kwargs: Keyword arguments for creating the blueprint.
@@ -202,24 +205,23 @@ def create_blueprint(
         else:  # If the app name does not exist
             raise AttributeError(
                 "You need to enter the app_name parameter if you enter the app parameter as a string")  # Raise error
-    else:  # If the app is not a string, pass
-        pass  # Pass
 
     if blueprint_kwargs is None:  # Checks if the user has entered any keyword arguments for the blueprint
         blueprint_kwargs = {}  # Sets the blueprint_kwargs variable to the default value of {}, empty dict
 
     if settings is not None:  # Checks if the user has entered settings
-        if isinstance(settings['Blueprint'], str):
+        if isinstance(settings['Blueprint'], str):  # Checks if the blueprint is a string or not
             try:
-                route = importlib.import_module(settings['path']) if isinstance(settings['path'], str) else settings['path']  # Imports the file with the blueprint
+                route = importlib.import_module(settings['path']) if isinstance(settings['path'], str) else settings[
+                    'path']  # Imports the file with the blueprint
                 app.register_blueprint(getattr(route, settings['blueprint']),
                                        url_prefix=settings['prefix'] if 'prefix' in settings else None, *args,
                                        **kwargs)  # Registers the blueprint
+                del route  # Deletes the imported route
             except ImportError as e:  # Error if the file didn't exist
                 if not c.SUPPRESS_WARNINGS:  # Checks if the user want warnings
                     warnings.warn(
-                        "One of the specified routes for create_app() was not found. "
-                        "If you have not specified any custom routes, it means that there is no /routes folder." +
+                        "An error occurred while trying to import the blueprint."
                         "\nFull python error: " + str(e),
                         ImportWarning
                     )  # Warning
@@ -227,12 +229,12 @@ def create_blueprint(
                 if not c.SUPPRESS_WARNINGS:  # Checks if the user want warnings
                     warnings.warn(
                         "Something went wrong trying to find the blueprint, "
-                        "either there is no function, you haven't entered a function, or something is spelled incorrectly." +
+                        "either there is no blueprint, or something is spelled incorrectly."
                         "\nFull python error: " + str(e),
                         ImportWarning
-                    )
-        else:
-            try:
+                    )  # Warning
+        else:  # If the blueprint isn't of type str
+            try:  # Try to register a blueprint
                 app.register_blueprint(settings['blueprint'],
                                        settings['prefix'] if 'prefix' in settings else None, *args,
                                        **kwargs)  # Registers the blueprint
@@ -240,15 +242,15 @@ def create_blueprint(
                 if not c.SUPPRESS_WARNINGS:  # Checks if the user want warnings
                     warnings.warn(
                         "Something went wrong trying to find the blueprint, "
-                        "either there is no function, you haven't entered a function, or something is spelled incorrectly." +
+                        "either there is no blueprint, or something is spelled incorrectly." +
                         "\nFull python error: " + str(e),
                         ImportWarning
                     )  # Warning
 
-    else:
-        if blueprint_name is not None and blueprint_import_name is not None:
-            blueprint = Blueprint(blueprint_name, blueprint_import_name, **blueprint_kwargs)
-            app.register_blueprint(blueprint, *args, **kwargs)
-            return blueprint
-        else:
-            app.register_blueprint(*args, **kwargs)
+    else:  # If there are no settings
+        if blueprint_name is not None and blueprint_import_name is not None:  # If there is a blueprint_name and blueprint_import_name
+            blueprint = Blueprint(blueprint_name, blueprint_import_name, **blueprint_kwargs)  # Create a blueprint
+            app.register_blueprint(blueprint, *args, **kwargs)  # Registers the blueprint
+            return blueprint  # Returns the blueprint to the user
+        else:  # If there isn't blueprint_name or blueprint_import_name
+            app.register_blueprint(*args, **kwargs)  # Register blueprint

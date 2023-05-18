@@ -137,14 +137,19 @@ If it is of type 'str', it can either be HTML code, an absolute path to a file c
 If it is of type 'TextIO', it will be read and the raw text will be set as the source.
 
 ---
-The instant_setup() function takes four arguments: pages, run, static and templates. Pages is a list containing Page objects.
+The ``instant_setup()`` function takes four arguments: pages, run, static and templates.
+
+Pages is a list containing Page objects.
 
 Run is a bool telling the function if it should run the application instantly. The default is True.
 
-Static is the folder in which all static files will be. This has to be an absolute path. Default is templates, but it won't do anything.
+Static is the folder in which all static files will be. Default is 'static'.
 
-Templates is the folder in which all templates will be. This has to be an absolute path. Default is templates, but it won't do anything.
+Templates is the folder in which all templates will be. Default is 'templates'.
 
 ---
 # Ideas
-* Compatibility with python versions below 3.10
+* Have all args and kwargs (primarily in ``create_app()``) in the same variable instead of having some be dictionaries.
+
+---
+### For more functionality, visit the [GitHub](https://github.com/IHasBone/flaskez).
